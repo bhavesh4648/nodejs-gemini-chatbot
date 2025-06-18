@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -23,7 +23,15 @@
       async function sendMessage() {
         const message = document.getElementById("message").value;
 
-        const res = await fetch("/chat", {
+        // const res = await fetch("/chat", {
+        //   method: "POST",
+        //   headers: {
+        //     "Content-Type": "application/json",
+        //   },
+        //   body: JSON.stringify({ message }),
+        // });
+
+        const res = await fetch("/generate-image", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -33,6 +41,179 @@
 
         const data = await res.json();
         document.getElementById("reply").textContent = data.reply;
+      }
+    </script>
+  </body>
+</html> -->
+<!-- 
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gemini Image Generator</title>
+  </head>
+  <body>
+    <h1>Gemini Image Generator</h1>
+    <textarea
+      id="prompt"
+      rows="5"
+      cols="50"
+      placeholder="Describe the image you want to generate..."
+    ></textarea>
+    <br />
+    <button onclick="generateImage()">Generate Image</button>
+
+    <h2>Generated Image:</h2>
+    <img
+      id="generatedImage"
+      style="max-width: 400px; display: block; margin-top: 10px"
+    />
+    <pre id="error" style="color: red"></pre>
+
+    <script>
+      async function generateImage() {
+        const prompt = document.getElementById("prompt").value;
+        document.getElementById("error").textContent = "";
+        document.getElementById("generatedImage").src = "";
+
+        const res = await fetch("/generate-image", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ prompt }),
+        });
+
+        const data = await res.json();
+
+        if (data.image) {
+          // Display the base64 image (assume PNG; update if your backend returns a different format)
+          document.getElementById("generatedImage").src =
+            "data:image/png;base64," + data.image;
+        } else {
+          document.getElementById("error").textContent =
+            data.error || "Failed to generate image.";
+        }
+      }
+    </script>
+  </body>
+</html> -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gemini AI Demo</title>
+    <style>
+      .hidden {
+        display: none;
+      }
+      .visible {
+        display: block;
+      }
+      #chatMessages {
+        border: 1px solid #ccc;
+        padding: 10px;
+        max-width: 400px;
+        height: 200px;
+        overflow-y: auto;
+      }
+      textarea {
+        width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Gemini AI Demo</h1>
+    <button onclick="showSection('image')">Image Generator</button>
+    <button onclick="showSection('chat')">Chatbot</button>
+
+    <!-- Image Generator Section -->
+    <div id="imageSection" class="visible">
+      <h2>Image Generator</h2>
+      <textarea
+        id="prompt"
+        rows="3"
+        placeholder="Describe the image you want to generate..."
+      ></textarea>
+      <br />
+      <button onclick="generateImage()">Generate Image</button>
+      <h3>Generated Image:</h3>
+      <img
+        id="generatedImage"
+        style="max-width: 400px; display: block; margin-top: 10px"
+      />
+      <pre id="imageError" style="color: red"></pre>
+    </div>
+
+    <!-- Chatbot Section -->
+    <div id="chatSection" class="hidden">
+      <h2>Chatbot</h2>
+      <div id="chatMessages"></div>
+      <textarea
+        id="chatInput"
+        rows="2"
+        placeholder="Type your message..."
+      ></textarea>
+      <br />
+      <button onclick="sendMessage()">Send</button>
+      <pre id="chatError" style="color: red"></pre>
+    </div>
+
+    <script>
+      function showSection(section) {
+        document.getElementById("imageSection").className =
+          section === "image" ? "visible" : "hidden";
+        document.getElementById("chatSection").className =
+          section === "chat" ? "visible" : "hidden";
+      }
+
+      async function generateImage() {
+        const prompt = document.getElementById("prompt").value;
+        document.getElementById("imageError").textContent = "";
+        document.getElementById("generatedImage").src = "";
+
+        const res = await fetch("/generate-image", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt }),
+        });
+        const data = await res.json();
+
+        if (data.image) {
+          document.getElementById("generatedImage").src =
+            "data:image/png;base64," + data.image;
+        } else {
+          document.getElementById("imageError").textContent =
+            data.error || "Failed to generate image.";
+        }
+      }
+
+      async function sendMessage() {
+        const input = document.getElementById("chatInput");
+        const message = input.value.trim();
+        if (!message) return;
+        input.value = "";
+
+        const chatMessages = document.getElementById("chatMessages");
+        chatMessages.innerHTML += `<div><b>You:</b> ${message}</div>`;
+
+        const res = await fetch("/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message }),
+        });
+        const data = await res.json();
+
+        if (data.reply) {
+          chatMessages.innerHTML += `<div><b>Gemini:</b> ${data.reply}</div>`;
+        } else {
+          document.getElementById("chatError").textContent =
+            data.error || "Failed to get reply.";
+        }
+        chatMessages.scrollTop = chatMessages.scrollHeight;
       }
     </script>
   </body>
